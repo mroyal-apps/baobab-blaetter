@@ -215,4 +215,10 @@ window.addEventListener('hashchange', () => router());
 document.documentElement.lang = etat.langue;
 dessinerEntete();
 router();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  // Quand une nouvelle version de l'appli arrive, on recharge la page une fois pour l'afficher.
+  const avaitVersion = !!navigator.serviceWorker.controller;
+  let recharge = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (avaitVersion && !recharge) { recharge = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+}
