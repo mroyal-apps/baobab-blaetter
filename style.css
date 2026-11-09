@@ -326,3 +326,50 @@ input.u-case.u-long { width:100%; max-width:30em; text-align:left; }
 .etapes-install { line-height:1.6; padding-left:1.3em; }
 .etapes-install li { margin:6px 0; }
 @media print { .btn-installer { display:none; } }
+
+/* v0.9.9 : numéro de version visible + retour sur la page Klasse */
+.version-app { display:inline-block; margin-top:6px; font-size:.85rem; color:var(--gris); background:#fff; border:1px solid #e3ddd0; border-radius:12px; padding:1px 10px; }
+.barre-retour { margin-bottom:4px; }
+.barre-retour .retour { display:inline-block; font-size:1rem; font-weight:700; border:2px solid var(--vert); border-radius:20px; padding:4px 14px; background:#fff; }
+.barre-retour .retour:hover { background:var(--vert); color:#fff; }
+@media print { .barre-retour, .version-app { display:none; } }
+.bandeau-maj { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:60; display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;
+  max-width:calc(100% - 32px); background:#fff8db; border:2px solid var(--or); border-radius:16px; padding:10px 14px; box-shadow:0 6px 24px rgba(0,0,0,.18); font-weight:700; }
+.bandeau-maj.ok { background:#e8f6ee; border-color:var(--vert); }
+.bandeau-maj[hidden] { display:none; }
+.bandeau-maj .fermer-maj { border:0; background:none; font-size:1.4rem; cursor:pointer; color:var(--gris); }
+@media print { .bandeau-maj { display:none; } }
+.bandeau-maj .btn { width:auto; margin:0; padding:6px 16px; }
+.bandeau-maj { flex-wrap:nowrap; }
+@media (max-width:520px) { .bandeau-maj { flex-wrap:wrap; } }
+.bandeau-maj .btn { white-space:nowrap; }
+
+/* v0.10 : points du guide de départ */
+.pastille-version { margin-left:8px; font-size:.75rem; font-weight:700; color:var(--vert); background:#e8f3ef; border:1px solid #bcd9cf; border-radius:10px; padding:1px 8px; vertical-align:middle; }
+.btn-installer.installee { background:#e8f6ee; color:var(--vert); border:2px solid var(--vert); }
+.comment-marche { background:#fff; border:2px solid #e3ddd0; border-radius:14px; padding:6px 16px 10px; margin:12px 0 22px; }
+.comment-marche details { border-top:1px solid #eee6d6; padding:8px 0; }
+.comment-marche summary { font-weight:700; cursor:pointer; }
+.comment-marche .version-aide { color:var(--gris); font-size:.9rem; margin:8px 0 0; }
+.topbar { padding-top:max(env(safe-area-inset-top), 0px); }
+body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+.onglets { display:none; }
+@media (max-width:640px) {
+  .onglets { display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40; background:#fff; border-top:2px solid var(--or);
+    padding:4px 2px calc(4px + env(safe-area-inset-bottom)); justify-content:space-around; box-shadow:0 -2px 10px rgba(0,0,0,.08); }
+  .onglets a, .onglets .onglet-etoiles { flex:1; display:flex; flex-direction:column; align-items:center; text-decoration:none; font-size:.72rem; font-weight:700; color:var(--gris); padding:3px 0; border-radius:10px; min-width:0; }
+  .onglets .ic { font-size:1.25rem; line-height:1.4; }
+  .onglets .ic.chiffre { font-family:Fredoka, sans-serif; color:var(--vert); border:2px solid var(--vert); border-radius:8px; width:28px; text-align:center; font-size:1.05rem; line-height:1.35; }
+  .onglets a.actif { color:var(--vert); background:#e8f3ef; }
+  .onglets a.actif .ic.chiffre { background:var(--vert); color:#fff; }
+  .onglets .onglet-etoiles { color:#8a6500; }
+  body { padding-bottom:calc(68px + env(safe-area-inset-bottom)); }
+  /* en haut sur téléphone : seulement logo, installer et langues */
+  #nav > a, #nav > .nav-label, #nav > .nav-etoiles { display:none; }
+  .bandeau-maj { bottom:calc(76px + env(safe-area-inset-bottom)); }
+}
+@media print { .onglets, .pastille-version { display:none !important; } }
+.version-test .sep-prix { display:none !important; }
+.brand small.pastille-version { border:1px solid #bcd9cf; color:var(--vert); font-weight:700; background:#e8f3ef; }
+.brand small { white-space:nowrap; }
+@media (max-width:640px) { .brand span { font-size:1.15rem; white-space:nowrap; } .brand small { font-size:.62rem; } .brand { flex-wrap:wrap; row-gap:2px; } }

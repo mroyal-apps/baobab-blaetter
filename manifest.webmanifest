@@ -1,7 +1,10 @@
 {
   "name": "Baobab Blätter – Üben und Arbeitsblätter",
   "short_name": "Baobab Blätter",
+  "id": "./",
   "start_url": "./index.html",
+  "scope": "./",
+  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
   "display": "standalone",
   "background_color": "#fbf7ef",
   "theme_color": "#1f6f5c",
