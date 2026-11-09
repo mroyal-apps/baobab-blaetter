@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. 3 langues : fr, en, de.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.10.1', date: '09/11/2026' };
+const VERSION_APP = { num: '0.10.2', date: '09/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -286,7 +286,8 @@ let canalMaj = null;
 try { canalMaj = new BroadcastChannel('baobab-blaetter'); canalMaj.onmessage = e => { if (e.data === 'maj') location.reload(); }; } catch (e) {}
 async function mettreAJour() {
   try { canalMaj && canalMaj.postMessage('maj'); } catch (e) {}
-  try { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } catch (e) {}
+  // On n'efface que les caches de Baobab Blätter (jamais ceux des autres applis sur la même adresse).
+  try { const ks = await caches.keys(); await Promise.all(ks.filter(k => k.startsWith('baobab-blaetter-') || /^baobab-\d{8}-\d{4}$/.test(k)).map(k => caches.delete(k))); } catch (e) {}
   try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {}
   location.reload();
 }
