@@ -373,3 +373,11 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .brand small.pastille-version { border:1px solid #bcd9cf; color:var(--vert); font-weight:700; background:#e8f3ef; }
 .brand small { white-space:nowrap; }
 @media (max-width:640px) { .brand span { font-size:1.15rem; white-space:nowrap; } .brand small { font-size:.62rem; } .brand { flex-wrap:wrap; row-gap:2px; } }
+
+/* v0.10.1 : iPad/iPhone (appli installée) – le haut de l'écran était flou et délavé.
+   iOS met un effet flou sous la barre d'état. On colle l'en-tête en haut (fond blanc plein)
+   et on le descend sous la zone floue. */
+.topbar { background:#fff; }
+@media (display-mode: standalone) {
+  .topbar { position:sticky; top:0; z-index:45; padding-top:calc(env(safe-area-inset-top) + 22px); }
+}
