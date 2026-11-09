@@ -34,20 +34,54 @@ function majEtoilesNav() { const el = document.getElementById('nav-etoiles'); if
 function modeKlasse() { try { return localStorage.getItem('baobab-blaetter.mode') === 'ecran' ? 'ecran' : 'papier'; } catch (e) { return 'papier'; } }
 function changerMode(m) { try { localStorage.setItem('baobab-blaetter.mode', m); } catch (e) {} router(true); }
 
-// ---------- Personnage : Amara (nom provisoire) ----------
-function amaraSVG(humeur) {
-  const bouche = humeur === 'triste' ? 'M38 66 Q50 58 62 66' : humeur === 'fete' ? 'M34 60 Q50 80 66 60 Z' : 'M36 62 Q50 74 64 62';
-  return `<svg viewBox="0 0 100 100" class="amara ${humeur || ''}" aria-hidden="true">
-    <circle cx="22" cy="30" r="14" fill="#2b1d16"/><circle cx="78" cy="30" r="14" fill="#2b1d16"/>
-    <circle cx="50" cy="52" r="34" fill="#8d5a3b"/>
-    <path d="M18 44 Q22 16 50 16 Q78 16 82 44 Q66 30 50 32 Q34 30 18 44Z" fill="#2b1d16"/>
-    <circle cx="16" cy="56" r="4" fill="#f4c542"/><circle cx="84" cy="56" r="4" fill="#f4c542"/>
-    <circle cx="38" cy="50" r="4.5" fill="#1b1b1b"/><circle cx="62" cy="50" r="4.5" fill="#1b1b1b"/>
-    <circle cx="39.5" cy="48.5" r="1.4" fill="#fff"/><circle cx="63.5" cy="48.5" r="1.4" fill="#fff"/>
-    <circle cx="30" cy="60" r="5" fill="#c0392b" opacity=".25"/><circle cx="70" cy="60" r="5" fill="#c0392b" opacity=".25"/>
-    <path d="${bouche}" fill="${humeur === 'fete' ? '#7a1f1f' : 'none'}" stroke="#3a1a10" stroke-width="3" stroke-linecap="round"/>
+// ---------- Personnages : Amara (fille) et Noah (garçon, nom provisoire) ----------
+// Dessins originaux en SVG (pas d'image à télécharger, marche hors ligne).
+const PERSOS = {
+  amara: { nom: 'Amara', peau: '#f5dcc4', ombre: '#e6c3a3', cheveux: '#efcdaf', cheveux2: '#d4ab85', haut: '#2f9e55', haut2: '#25804a', fille: true },
+  noah:  { nom: 'Noah',  peau: '#f2d5ba', ombre: '#e2bd9b', cheveux: '#e6c09c', cheveux2: '#c99d74', haut: '#2a6fdb', haut2: '#1f58b3', fille: false }
+};
+function personnageSVG(qui, humeur) {
+  const P = PERSOS[qui] || PERSOS.amara, h = humeur || '';
+  const bouche = h === 'triste' ? '<path d="M52 83 Q60 77 68 83" fill="none" stroke="#6b2b1d" stroke-width="2.6" stroke-linecap="round"/>'
+    : h === 'fete' ? '<path d="M49 77 Q60 93 71 77 Z" fill="#7a1f1f"/><path d="M53 79 Q60 82 67 79" fill="#fff"/><path d="M54 85 Q60 89 66 85" fill="#e86a6a"/>'
+    : '<path d="M51 78 Q60 88 69 78" fill="none" stroke="#6b2b1d" stroke-width="2.6" stroke-linecap="round"/>';
+  const sourcils = h === 'triste' ? '<path d="M41 52 Q47 48 53 51 M67 51 Q73 48 79 52" fill="none" stroke="' + P.cheveux2 + '" stroke-width="2.2" stroke-linecap="round"/>'
+    : '<path d="M41 50 Q47 46 53 49 M67 49 Q73 46 79 50" fill="none" stroke="' + P.cheveux2 + '" stroke-width="2.2" stroke-linecap="round"/>';
+  const yeux = h === 'fete'
+    ? '<path d="M43 62 Q48 56 53 62 M67 62 Q72 56 77 62" fill="none" stroke="#1b1b1b" stroke-width="2.6" stroke-linecap="round"/>'
+    : `<ellipse cx="48" cy="61" rx="4.6" ry="5.4" fill="#2a1a12"/><ellipse cx="72" cy="61" rx="4.6" ry="5.4" fill="#2a1a12"/>
+       <circle cx="49.6" cy="59" r="1.7" fill="#fff"/><circle cx="73.6" cy="59" r="1.7" fill="#fff"/><circle cx="46.8" cy="63.2" r=".8" fill="#fff"/><circle cx="70.8" cy="63.2" r=".8" fill="#fff"/>
+       ${P.fille ? '<path d="M42 57 l-2.5 -2 M44 55.5 l-1.6 -2.6 M78 57 l2.5 -2 M76 55.5 l1.6 -2.6" stroke="#2a1a12" stroke-width="1.2" stroke-linecap="round"/>' : ''}`;
+  // boucles de cheveux : petits cercles pour donner une texture frisée
+  const boucles = (cx, cy, r, n, rr) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return `<circle cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(cy + Math.sin(a) * r).toFixed(1)}" r="${rr}"/>`; }).join('');
+  const cheveuxArriere = P.fille
+    ? `<g fill="${P.cheveux}">${boucles(24, 34, 9, 9, 6)}<circle cx="24" cy="34" r="11"/>${boucles(96, 34, 9, 9, 6)}<circle cx="96" cy="34" r="11"/></g>
+       <g fill="${P.cheveux2}" opacity=".35"><circle cx="20" cy="38" r="3"/><circle cx="27" cy="30" r="2.5"/><circle cx="92" cy="30" r="2.5"/><circle cx="99" cy="38" r="3"/></g>`
+    : '';
+  const cheveuxDessus = P.fille
+    ? `<path d="M30 52 Q30 22 60 20 Q90 22 90 52 Q82 36 60 35 Q38 36 30 52Z" fill="${P.cheveux}"/>
+       <path d="M40 30 Q60 24 80 30" fill="none" stroke="${P.cheveux2}" stroke-width="1.5" opacity=".5"/>
+       <path d="M33 40 Q60 30 87 40" fill="none" stroke="#f4c542" stroke-width="3.5" stroke-linecap="round"/>`
+    : `<g fill="${P.cheveux}">${Array.from({ length: 11 }, (_, i) => { const a = Math.PI + i / 10 * Math.PI; return `<circle cx="${(60 + Math.cos(a) * 29).toFixed(1)}" cy="${(46 + Math.sin(a) * 25).toFixed(1)}" r="6.5"/>`; }).join('')}
+       <path d="M31 50 Q31 21 60 20 Q89 21 89 50 Q80 38 60 37 Q40 38 31 50Z"/></g>
+       <g fill="${P.cheveux2}" opacity=".4"><circle cx="45" cy="27" r="2"/><circle cx="58" cy="24" r="2"/><circle cx="72" cy="27" r="2"/><circle cx="38" cy="35" r="1.8"/><circle cx="82" cy="35" r="1.8"/></g>`;
+  return `<svg viewBox="0 0 120 120" class="amara perso-${qui} ${h}" aria-hidden="true">
+    ${cheveuxArriere}
+    <path d="M30 120 Q30 98 60 96 Q90 98 90 120Z" fill="${P.haut}"/>
+    <path d="M50 97 Q60 106 70 97" fill="none" stroke="${P.haut2}" stroke-width="3"/>
+    <rect x="53" y="86" width="14" height="13" rx="5" fill="${P.ombre}"/>
+    <ellipse cx="31" cy="64" rx="5.5" ry="7" fill="${P.ombre}"/><ellipse cx="89" cy="64" rx="5.5" ry="7" fill="${P.ombre}"/>
+    ${P.fille ? '<circle cx="31" cy="72" r="2.8" fill="#f4c542"/><circle cx="89" cy="72" r="2.8" fill="#f4c542"/>' : ''}
+    <ellipse cx="60" cy="62" rx="29" ry="31" fill="${P.peau}"/>
+    ${cheveuxDessus}
+    ${sourcils}${yeux}
+    <path d="M58 66 Q60 71 63 68" fill="none" stroke="${P.ombre}" stroke-width="2.2" stroke-linecap="round"/>
+    <ellipse cx="42" cy="73" rx="5" ry="3.2" fill="#e8877a" opacity=".35"/><ellipse cx="78" cy="73" rx="5" ry="3.2" fill="#e8877a" opacity=".35"/>
+    ${bouche}
   </svg>`;
 }
+const amaraSVG = humeur => personnageSVG('amara', humeur);
+
 const BRAVO = ['Super!', 'Toll gemacht!', 'Richtig!', 'Prima!', 'Klasse!', 'Sehr gut!', 'Weiter so!'];
 const ENCORE = ['Fast! Versuch es noch einmal.', 'Noch nicht. Schau genau hin.', 'Probier es noch einmal!'];
 
@@ -125,7 +159,7 @@ function pageUeben(k, id, memo) {
     </div>
     <div class="ueben-tete">
       <div class="perso" id="perso">${amaraSVG()}</div>
-      <div class="bulle" id="bulle">Hallo! Ich bin Amara. Los geht's!</div>
+      <div class="bulle" id="bulle">Hallo! Los geht's!</div>
     </div>
     <h1 class="ueben-titre">${base.nom} <small>Klasse ${k}</small></h1>
     ${optsVisibles.length ? `<div class="options ueben-choix-ex">${optsVisibles.map(o => champ(o, theme)).join('')}</div>` : ''}
@@ -145,9 +179,9 @@ function pageUeben(k, id, memo) {
     <details class="aide-ecran"><summary>👪 ${t('aide_titre')}</summary><div id="u-aide">${aideHTML(base.aide || base.id)}</div></details>
   </section>`;
   remettreOptions(memo);
-  let total = 0, faits = 0, etoiles = 0, f, uebung = null;
+  let total = 0, faits = 0, etoiles = 0, f, uebung = null, qui = 'amara';
   const zone = () => document.getElementById('u-zone');
-  const dire = (txt, humeur) => { document.getElementById('bulle').textContent = txt; document.getElementById('perso').innerHTML = amaraSVG(humeur); };
+  const dire = (txt, humeur) => { document.getElementById('bulle').textContent = txt; document.getElementById('perso').innerHTML = personnageSVG(qui, humeur); };
   const maj = () => {
     document.getElementById('compte').textContent = `${faits} / ${total}`;
     document.getElementById('jauge').style.width = (total ? 100 * faits / total : 0) + '%';
@@ -400,7 +434,8 @@ function pageUeben(k, id, memo) {
     const z = zone();
     z.innerHTML = f.rendu(true);
     total = transformer(z); faits = 0; etoiles = 0; maj();
-    dire('Hallo! Ich bin Amara. ' + f.consigne, 'content');
+    qui = etat.graine % 2 ? 'noah' : 'amara';   // Amara et Noah se relaient
+    dire('Hallo! Ich bin ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
     if (libre) setTimeout(() => suivant(null), 50);
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
