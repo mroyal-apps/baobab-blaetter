@@ -318,3 +318,11 @@ input.u-case.u-long { width:100%; max-width:30em; text-align:left; }
 }
 /* Version de test : pas de prix ni de badges de vente */
 .version-test a[href="#/preise"], .version-test .badge.gratis, .version-test .badge.cadenas, .version-test .hero .btn-lien { display:none !important; }
+
+/* v0.9.7 : bouton « Installer l'appli » */
+.btn-installer { margin-left:12px; font:inherit; font-weight:700; font-size:.95rem; color:#fff; background:var(--vert, #1f6f5c); border:0; border-radius:20px; padding:5px 14px; cursor:pointer; white-space:nowrap; }
+.btn-installer:hover { filter:brightness(1.1); }
+.boite-install { max-width:520px; }
+.etapes-install { line-height:1.6; padding-left:1.3em; }
+.etapes-install li { margin:6px 0; }
+@media print { .btn-installer { display:none; } }
