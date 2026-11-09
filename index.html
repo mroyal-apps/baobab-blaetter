@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Baobab Blätter – fiches d'exercices</title>
 <meta name="theme-color" content="#1f6f5c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Baobab Blätter">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
@@ -19,12 +21,13 @@
 <header class="topbar no-print">
   <a class="brand" href="#/">
     <img src="icons/icon.svg" alt="" width="34" height="34">
-    <span>Baobab Blätter</span><small id="provisoire"></small>
+    <span>Baobab Blätter</span><small id="provisoire"></small><small id="pastille-version" class="pastille-version"></small>
   </a>
   <nav id="nav"></nav>
 </header>
 <main id="app"></main>
 <footer class="no-print" id="pied-site"></footer>
+<nav id="onglets" class="onglets no-print" aria-label="Menu"></nav>
 <script src="data.js"></script>
 <script src="textes.js"></script>
 <script src="aide.js"></script>

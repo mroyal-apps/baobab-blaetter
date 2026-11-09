@@ -30,7 +30,7 @@ const CONSIGNE_ECRAN = {
 // ---------- Progrès (sur l'appareil) ----------
 function progres() { try { return Object.assign({ etoiles: 0, themes: {} }, JSON.parse(localStorage.getItem('baobab-blaetter.ueben') || '{}')); } catch (e) { return { etoiles: 0, themes: {} }; } }
 function garderProgres(p) { try { localStorage.setItem('baobab-blaetter.ueben', JSON.stringify(p)); } catch (e) {} }
-function majEtoilesNav() { const el = document.getElementById('nav-etoiles'); if (el) el.textContent = '⭐ ' + progres().etoiles; }
+function majEtoilesNav() { const n = progres().etoiles; const el = document.getElementById('nav-etoiles'); if (el) el.textContent = '⭐ ' + n; const o = document.getElementById('onglet-etoiles'); if (o) o.textContent = n; }
 function modeKlasse() { try { return localStorage.getItem('baobab-blaetter.mode') === 'ecran' ? 'ecran' : 'papier'; } catch (e) { return 'papier'; } }
 function changerMode(m) { try { localStorage.setItem('baobab-blaetter.mode', m); } catch (e) {} router(true); }
 

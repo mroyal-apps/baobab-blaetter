@@ -1,4 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. 3 langues : fr, en, de.
+// Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
+const VERSION_APP = { num: '0.10', date: '09/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -22,8 +24,24 @@ function dessinerEntete() {
      <span class="langues">${['de', 'fr', 'en'].map(l => `<button data-l="${l}" class="${l === etat.langue ? 'actif' : ''}">${l.toUpperCase()}</button>`).join('')}</span>`;
   document.querySelectorAll('.langues button').forEach(b => b.onclick = () => changerLangue(b.dataset.l));
   document.getElementById('provisoire').textContent = t('provisoire');
-  document.getElementById('pied-site').innerHTML = `${t('pied')} · <a href="#/preise">${t('preise')}</a> · <a href="#/rechtliches">${t('rechtliches')}</a>`;
+  document.getElementById('pastille-version').textContent = 'v' + VERSION_APP.num;
+  document.getElementById('pastille-version').title = 'Version ' + VERSION_APP.num + ' · ' + VERSION_APP.date;
+  // Téléphone : barre d'onglets en bas (Accueil, Klasse 1-4, Aide, étoiles)
+  document.getElementById('onglets').innerHTML =
+    `<a href="#/" data-r=""><span class="ic">🏠</span><span>${t('accueil')}</span></a>` +
+    [1, 2, 3, 4].map(k => `<a href="#/klasse/${k}" data-r="${k}"><span class="ic chiffre">${k}</span><span>Klasse</span></a>`).join('') +
+    `<a href="#/parents" data-r="parents"><span class="ic">👪</span><span>${t('onglet_aide')}</span></a>` +
+    `<span class="onglet-etoiles"><span class="ic">⭐</span><span id="onglet-etoiles">${progres().etoiles}</span></span>`;
+  marquerOnglet();
+  document.getElementById('pied-site').innerHTML = `${t('pied')}<span class="sep-prix"> · <a href="#/preise">${t('preise')}</a></span> · <a href="#/rechtliches">${t('rechtliches')}</a><br><span class="version-app" id="version-app">Version ${VERSION_APP.num} · ${VERSION_APP.date}</span>`;
 }
+
+function marquerOnglet() {
+  const p = location.hash.replace(/^#\/?/, '').split('/');
+  const k = (p[0] === 'klasse' || p[0] === 'fiche' || p[0] === 'ueben') ? p[1] : (p[0] === 'parents' ? 'parents' : '');
+  document.querySelectorAll('#onglets a').forEach(a => a.classList.toggle('actif', a.dataset.r === k));
+}
+window.addEventListener('hashchange', marquerOnglet);
 
 function OPTIONS() {
   const n = t('niv');
@@ -98,7 +116,7 @@ function pageKlasse(k) {
     return `<a class="carte-theme${ecran ? (jeu ? ' carte-jeu' : ' papier-seul') : ''}" href="#/${jeu ? 'ueben' : 'fiche'}/${k}/${x.id}"><b>${x.nom}</b><small>${sous}</small>${estGratuit(k, x.id) ? `<span class="badge gratis">${t('gratis')}</span>` : (estLibre(k, x.id) ? '' : '<span class="badge cadenas">🔒</span>')}</a>`;
   };
   const bloc = fach => `<h2 class="fach ${fach.toLowerCase()}">${fach}</h2><div class="themes">${themes.filter(x => x.fach === fach).map(carte).join('')}</div>`;
-  $app.innerHTML = `<section class="page"><h1>Klasse ${k}</h1>
+  $app.innerHTML = `<section class="page"><div class="barre-retour"><a href="#/" class="retour">← ${t('accueil')}</a></div><h1>Klasse ${k}</h1>
     <div class="modes" role="tablist"><button data-m="papier" class="${ecran ? '' : 'actif'}">${t('u_mode_papier')}</button><button data-m="ecran" class="${ecran ? 'actif' : ''}">${t('u_mode_ecran')}</button></div>
     <p>${ecran ? t('u_mode_p') : t('choisir')}</p>${bloc('Mathe')}${bloc('Deutsch')}${bloc('Jahreskreis')}${bloc('Themen')}</section>`;
   document.querySelectorAll('.modes button').forEach(b => b.onclick = () => changerMode(b.dataset.m));
@@ -181,8 +199,39 @@ function aideHTML(id) {
     <table class="mots"><tr><th>${t('col_de')}</th><th>${t('col_tr')}</th></tr>${a.mots.map(([d, f]) => `<tr><td>${d}</td><td>${f}</td></tr>`).join('')}</table></div>`;
 }
 
+const COMMENT = {
+  fr: { titre: 'Comment ça marche', sujets: [
+    ['📲 Installer l\'appli', 'Touche le bouton « Installer l\'appli » en haut. Il installe l\'appli tout de suite, ou il montre les gestes pour ton appareil (iPhone, Android, Mac, PC). Ensuite l\'icône est avec tes autres applis.'],
+    ['🔄 Mises à jour', 'Quand une nouvelle version existe, un message « Nouvelle version disponible » apparaît. Touche « Mettre à jour ». Le numéro de version est écrit en haut (pastille « v… ») et en bas de chaque page.'],
+    ['🖨️ / 🎮 Papier ou écran', 'Sur chaque page Klasse, choisis « Fiches à imprimer » (fiche A4 avec solutions) ou « S\'entraîner à l\'écran » (l\'enfant répond sur l\'écran et voit tout de suite si c\'est juste).'],
+    ['⭐ Les étoiles', 'L\'enfant gagne des étoiles quand il réussit. Elles restent sur cet appareil.'],
+    ['🔊 Le son', 'Le bouton « Écouter » lit la consigne en allemand. La voix vient de l\'appareil. Si tu n\'entends rien, monte le volume ou installe une voix allemande dans les réglages de l\'appareil.'],
+    ['📴 Sans internet', 'Après la première ouverture avec internet, l\'appli marche aussi sans internet.'],
+    ['🔒 Les données', 'Pas de compte, pas de nom. Les étoiles et la langue restent seulement sur cet appareil.']] },
+  en: { titre: 'How it works', sujets: [
+    ['📲 Install the app', 'Tap “Install the app” at the top. It installs the app right away, or shows the steps for your device (iPhone, Android, Mac, PC).'],
+    ['🔄 Updates', 'When a new version exists, a “New version available” message appears. Tap “Update”. The version number is shown at the top (“v…” badge) and at the bottom of every page.'],
+    ['🖨️ / 🎮 Paper or screen', 'On each Klasse page, choose “Printable sheets” (A4 with solutions) or “Practise on screen” (the child answers on the screen and sees right away if it is correct).'],
+    ['⭐ Stars', 'The child earns stars for correct answers. They stay on this device.'],
+    ['🔊 Sound', '“Listen” reads the task in German with the device voice. If you hear nothing, turn up the volume or install a German voice in the device settings.'],
+    ['📴 Offline', 'After the first visit with internet, the app also works offline.'],
+    ['🔒 Data', 'No account, no name. Stars and language stay only on this device.']] },
+  de: { titre: 'So funktioniert es', sujets: [
+    ['📲 App installieren', 'Tippe oben auf „App installieren“. Die App wird sofort installiert, oder du siehst die Schritte für dein Gerät (iPhone, Android, Mac, PC).'],
+    ['🔄 Updates', 'Gibt es eine neue Version, erscheint „Neue Version verfügbar“. Tippe auf „Aktualisieren“. Die Versionsnummer steht oben („v…“) und unten auf jeder Seite.'],
+    ['🖨️ / 🎮 Papier oder Bildschirm', 'Auf jeder Klassen-Seite: „Arbeitsblätter drucken“ (A4 mit Lösungen) oder „Am Bildschirm üben“ (das Kind antwortet am Bildschirm und sieht sofort, ob es stimmt).'],
+    ['⭐ Sterne', 'Für richtige Antworten gibt es Sterne. Sie bleiben auf diesem Gerät.'],
+    ['🔊 Ton', '„Anhören“ liest die Aufgabe mit der Stimme des Geräts vor. Hörst du nichts, mach lauter oder installiere eine deutsche Stimme in den Geräte-Einstellungen.'],
+    ['📴 Offline', 'Nach dem ersten Öffnen mit Internet funktioniert die App auch ohne Internet.'],
+    ['🔒 Daten', 'Kein Konto, kein Name. Sterne und Sprache bleiben nur auf diesem Gerät.']] }
+};
+function commentHTML() {
+  const c = COMMENT[etat.langue] || COMMENT.fr;
+  return `<section class="comment-marche" id="comment"><h2>${c.titre}</h2>${c.sujets.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}
+    <p class="version-aide">Version ${VERSION_APP.num} · ${VERSION_APP.date}</p></section>`;
+}
 function pageParents() {
-  $app.innerHTML = `<section class="page"><h1>${t('aide_titre')}</h1><p>${t('aide_intro')}</p>${Object.keys(AIDE).map(aideHTML).join('')}</section>`;
+  $app.innerHTML = `<section class="page"><h1>${t('aide_titre')}</h1>${commentHTML()}<p>${t('aide_intro')}</p>${Object.keys(AIDE).map(aideHTML).join('')}</section>`;
 }
 
 // ---------- Son : voix allemande du navigateur ----------
@@ -215,10 +264,48 @@ window.addEventListener('hashchange', () => router());
 document.documentElement.lang = etat.langue;
 dessinerEntete();
 router();
+// ---------- Mises à jour ----------
+// 1) Au démarrage et toutes les 5 minutes, l'appli regarde sur internet le numéro de la dernière version (version.json).
+//    Si elle est plus récente : bandeau « Nouvelle version disponible » + bouton « Mettre à jour ».
+// 2) Après une mise à jour : petit message « Mise à jour faite : version X ».
+const TEXTES_MAJ = {
+  fr: { dispo: v => `✨ Nouvelle version ${v} disponible.`, bouton: 'Mettre à jour', fait: v => `✅ Mise à jour faite : version ${v}` },
+  en: { dispo: v => `✨ New version ${v} available.`, bouton: 'Update', fait: v => `✅ Updated to version ${v}` },
+  de: { dispo: v => `✨ Neue Version ${v} verfügbar.`, bouton: 'Aktualisieren', fait: v => `✅ Aktualisiert: Version ${v}` }
+};
+const tMaj = () => TEXTES_MAJ[etat.langue] || TEXTES_MAJ.fr;
+function bandeauMaj(html, bouton) {
+  let b = document.getElementById('bandeau-maj');
+  if (!b) { b = document.createElement('div'); b.id = 'bandeau-maj'; b.className = 'bandeau-maj'; b.setAttribute('role', 'status'); document.body.appendChild(b); }
+  b.innerHTML = `<span>${html}</span>${bouton ? `<button class="btn principal" id="btn-maj">${bouton}</button>` : ''}<button class="fermer-maj" aria-label="×">×</button>`;
+  b.hidden = false;
+  b.querySelector('.fermer-maj').onclick = () => { b.hidden = true; };
+  return b;
+}
+let canalMaj = null;
+try { canalMaj = new BroadcastChannel('baobab-blaetter'); canalMaj.onmessage = e => { if (e.data === 'maj') location.reload(); }; } catch (e) {}
+async function mettreAJour() {
+  try { canalMaj && canalMaj.postMessage('maj'); } catch (e) {}
+  try { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } catch (e) {}
+  try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {}
+  location.reload();
+}
+async function verifierVersion() {
+  if (!location.protocol.startsWith('http') || !navigator.onLine) return;
+  try {
+    const v = (await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json()).num;
+    if (v && v !== VERSION_APP.num) bandeauMaj(tMaj().dispo(v), tMaj().bouton).querySelector('#btn-maj').onclick = mettreAJour;
+  } catch (e) {}
+}
+(function annoncerMiseAJour() {
+  let avant = null;
+  try { avant = localStorage.getItem('baobab-blaetter.version'); localStorage.setItem('baobab-blaetter.version', VERSION_APP.num); } catch (e) {}
+  if (avant && avant !== VERSION_APP.num) { const b = bandeauMaj(tMaj().fait(VERSION_APP.num)); b.classList.add('ok'); setTimeout(() => { b.hidden = true; }, 6000); }
+})();
+verifierVersion();
+setInterval(verifierVersion, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) verifierVersion(); });
+
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  // Quand une nouvelle version de l'appli arrive, on recharge la page une fois pour l'afficher.
-  const avaitVersion = !!navigator.serviceWorker.controller;
-  let recharge = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (avaitVersion && !recharge) { recharge = true; location.reload(); } });
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
 }
