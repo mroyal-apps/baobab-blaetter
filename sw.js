@@ -1,5 +1,5 @@
 // Service worker : l'appli marche hors ligne.
-const CACHE = 'baobab-20261109-1544';
+const CACHE = 'baobab-20261109-1607';
 const FILES = ['./', './index.html', './style.css', './data.js', './textes.js', './aide.js', './generateurs.js', './generateurs2.js', './themen.js', './niveaux.js', './histoires.js', './boutique.js', './ueben.js', './version-test.js', './app.js', './installer.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 // Installation : on télécharge des fichiers neufs (pas ceux gardés par le navigateur) et on active tout de suite.
