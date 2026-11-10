@@ -158,9 +158,16 @@ function pageUeben(k, id, memo) {
       <a href="#/fiche/${k}/${id}" class="retour">🖨️ ${t('u_fiche')}</a>
     </div>
     <div class="ueben-tete">
-      <div class="perso" id="perso">${amaraSVG()}</div>
-      <div class="bulle" id="bulle">Hallo! Los geht's!</div>
+      <div class="perso-col"><div class="perso" id="perso">${amaraSVG()}</div><button type="button" class="nom-perso" id="nom-perso"></button></div>
+      <div class="bulle" id="bulle" aria-live="polite">Hallo! Los geht's!</div>
     </div>
+    <form class="form-prenom" id="form-prenom" hidden>
+      <label>${t('u_ton_prenom')} <input id="in-prenom" maxlength="20" autocomplete="off" placeholder="${t('u_prenom_ex')}"></label>
+      <span class="choix-avatar"><b>${t('u_tu_es')}</b><label><input type="radio" name="genre" value="fille"> 👧 ${t('u_fille')}</label><label><input type="radio" name="genre" value="garcon"> 👦 ${t('u_garcon')}</label></span>
+      <span class="choix-avatar choix-compagnon"><b>${t('u_compagnon')}</b><label><input type="radio" name="avatar" value="robot"> 🤖 Bip</label><label><input type="radio" name="avatar" value="amara"> 👧 Amara</label><label><input type="radio" name="avatar" value="noah"> 👦 Noah</label></span>
+      <button class="btn principal" type="submit">${t('u_ok')}</button>
+      <button class="btn" type="button" id="b-sans-prenom">${t('u_sans_prenom')}</button>
+    </form>
     <h1 class="ueben-titre">${base.nom} <small>Klasse ${k}</small></h1>
     ${optsVisibles.length ? `<div class="options ueben-choix-ex">${optsVisibles.map(o => champ(o, theme)).join('')}</div>` : ''}
     <div class="ueben-barre">
@@ -171,6 +178,7 @@ function pageUeben(k, id, memo) {
     <div class="ueben-outils">
       <button class="btn" id="u-lire">🔊 ${t('u_ecouter')}</button>
       <button class="btn" id="u-neu">🔄 ${t('u_nouveau')}</button>
+      <button class="btn" id="u-voix" aria-pressed="false"></button>
     </div>
     ${libre ? '' : `<p class="verrou">${t('u_verrou')}</p><button class="btn achat" id="u-acheter">${t('freischalten')}</button>`}
     <p class="consigne ueben-consigne" id="u-consigne"></p>
@@ -181,7 +189,18 @@ function pageUeben(k, id, memo) {
   remettreOptions(memo);
   let total = 0, faits = 0, etoiles = 0, f, uebung = null, qui = 'amara';
   const zone = () => document.getElementById('u-zone');
-  const dire = (txt, humeur) => { document.getElementById('bulle').textContent = txt; document.getElementById('perso').innerHTML = personnageSVG(qui, humeur); };
+  // v0.11 : le prénom de l'enfant et son compagnon (Bip par défaut, ou Amara, ou Noah), gardés sur cet appareil
+  const enfant = lireEnfant;
+  let serie = 0;     // bonnes réponses de suite
+  const majNom = () => { const b = document.getElementById('nom-perso'), e = enfant(); if (b) b.textContent = e && e.prenom ? '✏️ ' + e.prenom : '✏️ ' + t('u_mon_prenom'); };
+  const dire = (txt, humeur, parler) => {
+    document.getElementById('bulle').textContent = txt;
+    const pe = document.getElementById('perso'); pe.innerHTML = personnageSVG(qui, humeur);
+    pe.classList.remove('bouge-content', 'bouge-triste', 'bouge-fete'); void pe.offsetWidth; if (humeur) pe.classList.add('bouge-' + humeur);
+    if (parler !== false && bipParle()) { etat.lent = false; lire(txt.replace(/[🔥🏆🚀🎉⭐]/gu, '')); }
+  };
+  const bonjour = () => { const e = enfant(); return (e && e.prenom ? 'Hallo ' + e.prenom + '! ' : 'Hallo! ') + (qui === 'robot' ? 'Ich bin Bip, dein Roboter. Wir üben zusammen! ' : 'Ich bin ' + PERSOS[qui].nom + '. ') + f.consigne; };
+  const majVoix = () => { const b = document.getElementById('u-voix'); b.textContent = '🤖🔊 ' + t(bipParle() ? 'u_voix_oui' : 'u_voix_non'); b.setAttribute('aria-pressed', bipParle()); };
   const maj = () => {
     document.getElementById('compte').textContent = `${faits} / ${total}`;
     document.getElementById('jauge').style.width = (total ? 100 * faits / total : 0) + '%';
@@ -208,7 +227,7 @@ function pageUeben(k, id, memo) {
     const th = p.themes[cle] || { fois: 0, meilleur: 0 };
     th.fois++; th.meilleur = Math.max(th.meilleur, Math.round(100 * etoiles / total));
     p.themes[cle] = th; garderProgres(p); majEtoilesNav();
-    dire(etoiles === total ? 'Wow! Alles richtig beim ersten Mal!' : 'Geschafft! Du hast toll geübt.', 'fete');
+    dire(parole(etoiles === total ? 'fin_parfait' : etoiles >= total / 2 ? 'fin_bien' : 'fin_courage', enfant()), 'fete');
     sonFete();
     const fin = document.getElementById('u-fin');
     fin.hidden = false;
@@ -222,7 +241,8 @@ function pageUeben(k, id, memo) {
     const premier = !c.essais;
     faits++; if (premier) etoiles++;
     c.classList.remove('faux'); c.classList.add('ok');
-    sonJuste(); dire(BRAVO[Math.floor(Math.random() * BRAVO.length)] + (premier ? ' ⭐' : ''), 'content');
+    serie = premier ? serie + 1 : 0;
+    sonJuste(); dire(parole(serie === 5 || serie === 10 ? 'serie5' : serie === 3 ? 'serie3' : 'bravo', enfant()) + (premier ? ' ⭐' : ''), 'content');
     maj(); if (faits === total) fini(); else suivant(c);
   };
   const rate = (c, attendu, indice) => {
@@ -232,11 +252,11 @@ function pageUeben(k, id, memo) {
     if (c.essais >= 3) {        // après 3 essais : on montre la solution, sans étoile
       faits++; c.classList.remove('faux'); c.classList.add('vu');
       c.montrer();
-      dire('Schau: Die Lösung ist „' + attendu + '“. Beim nächsten Mal klappt es!', 'triste');
+      serie = 0; dire(parole('solution', enfant(), attendu), 'triste');
       maj(); if (faits === total) fini(); else suivant(c);
       return true;
     }
-    dire(indice || ENCORE[Math.floor(Math.random() * ENCORE.length)], 'triste');
+    serie = 0; dire(indice || parole(c.essais === 1 ? 'essai1' : 'essai2', enfant()), 'triste');
     return false;
   };
 
@@ -434,11 +454,35 @@ function pageUeben(k, id, memo) {
     const z = zone();
     z.innerHTML = f.rendu(true);
     total = transformer(z); faits = 0; etoiles = 0; maj();
-    qui = etat.graine % 2 ? 'noah' : 'amara';   // Amara et Noah se relaient
-    dire('Hallo! Ich bin ' + PERSOS[qui].nom + '. ' + f.consigne, 'content');
+    const e = enfant();
+    qui = e && PERSOS[e.avatar] ? e.avatar : 'robot';   // v0.11 : Bip le robot par défaut ; l'enfant peut choisir Amara ou Noah
+    majNom(); serie = 0;
+    dire(bonjour(), 'content', false);
     if (libre) setTimeout(() => suivant(null), 50);
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
+  // Formulaire « mon prénom »
+  const fp = document.getElementById('form-prenom');
+  document.getElementById('nom-perso').onclick = () => {
+    const e = enfant() || {}; fp.hidden = !fp.hidden;
+    document.getElementById('in-prenom').value = e.prenom || '';
+    fp.querySelectorAll('input[name=avatar]').forEach(r => r.checked = r.value === qui);
+    fp.querySelectorAll('input[name=genre]').forEach(r => r.checked = e.fille === undefined ? false : r.value === (e.fille ? 'fille' : 'garcon'));
+    if (!fp.hidden) document.getElementById('in-prenom').focus();
+  };
+  fp.onsubmit = ev => {
+    ev.preventDefault();
+    const prenom = document.getElementById('in-prenom').value.trim().replace(/\s+/g, ' ').slice(0, 20);
+    const av = (fp.querySelector('input[name=avatar]:checked') || {}).value || 'robot';
+    const g = (fp.querySelector('input[name=genre]:checked') || {}).value;
+    const d = { avatar: av }; if (prenom) d.prenom = maj1(prenom); if (g) d.fille = g === 'fille';
+    garderEnfant(d);
+    fp.hidden = true; qui = av; majNom();
+    dire(bonjour(), 'content');
+  };
+  document.getElementById('b-sans-prenom').onclick = () => { garderEnfant(null); fp.hidden = true; qui = 'robot'; majNom(); dire(bonjour(), 'content'); };
+  document.getElementById('u-voix').onclick = () => { changerBipParle(); majVoix(); if (bipParle()) dire(qui === 'robot' ? 'Bip bip! Jetzt spreche ich.' : 'Jetzt spreche ich.', 'content'); else if ('speechSynthesis' in window) speechSynthesis.cancel(); };
+  majVoix();
   document.getElementById('u-neu').onclick = () => { etat.graine = nouvelleGraine(); dessiner(); };
   document.getElementById('u-lire').onclick = () => { etat.lent = uebung === 'diktat'; lire(uebung === 'lesen' || uebung === 'geschichte' || uebung === 'diktat' ? f.audio : f.consigne); };
   if (!libre) document.getElementById('u-acheter').onclick = () => ouvrirBoutique(k, id, () => router(true));

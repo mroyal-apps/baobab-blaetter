@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. 3 langues : fr, en, de.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.10.2', date: '09/11/2026' };
+const VERSION_APP = { num: '0.11', date: '10/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -20,7 +20,7 @@ function changerLangue(l) {
 }
 function dessinerEntete() {
   document.getElementById('nav').innerHTML =
-    `<a href="#/">${t('accueil')}</a><span class="nav-label">Klasse</span>${[1, 2, 3, 4].map(k => `<a href="#/klasse/${k}" class="nav-k">${k}</a>`).join('')}<a href="#/parents">${t('parents')}</a><a href="#/preise">${t('preise')}</a><span id="nav-etoiles" class="nav-etoiles" title="Sterne">⭐ ${progres().etoiles}</span>
+    `<a href="#/">${t('accueil')}</a><span class="nav-label">Klasse</span>${[1, 2, 3, 4].map(k => `<a href="#/klasse/${k}" class="nav-k">${k}</a>`).join('')}<a href="#/parents">${t('parents')}</a><a href="#/guide">📖 ${t('g_menu')}</a><a href="#/preise">${t('preise')}</a><span id="nav-etoiles" class="nav-etoiles" title="Sterne">⭐ ${progres().etoiles}</span>
      <span class="langues">${['de', 'fr', 'en'].map(l => `<button data-l="${l}" class="${l === etat.langue ? 'actif' : ''}">${l.toUpperCase()}</button>`).join('')}</span>`;
   document.querySelectorAll('.langues button').forEach(b => b.onclick = () => changerLangue(b.dataset.l));
   document.getElementById('provisoire').textContent = t('provisoire');
@@ -30,7 +30,7 @@ function dessinerEntete() {
   document.getElementById('onglets').innerHTML =
     `<a href="#/" data-r=""><span class="ic">🏠</span><span>${t('accueil')}</span></a>` +
     [1, 2, 3, 4].map(k => `<a href="#/klasse/${k}" data-r="${k}"><span class="ic chiffre">${k}</span><span>Klasse</span></a>`).join('') +
-    `<a href="#/parents" data-r="parents"><span class="ic">👪</span><span>${t('onglet_aide')}</span></a>` +
+    `<a href="#/guide" data-r="guide"><span class="ic">📖</span><span>${t('onglet_aide')}</span></a>` +
     `<span class="onglet-etoiles"><span class="ic">⭐</span><span id="onglet-etoiles">${progres().etoiles}</span></span>`;
   marquerOnglet();
   document.getElementById('pied-site').innerHTML = `${t('pied')}<span class="sep-prix"> · <a href="#/preise">${t('preise')}</a></span> · <a href="#/rechtliches">${t('rechtliches')}</a><br><span class="version-app" id="version-app">Version ${VERSION_APP.num} · ${VERSION_APP.date}</span>`;
@@ -38,7 +38,7 @@ function dessinerEntete() {
 
 function marquerOnglet() {
   const p = location.hash.replace(/^#\/?/, '').split('/');
-  const k = (p[0] === 'klasse' || p[0] === 'fiche' || p[0] === 'ueben') ? p[1] : (p[0] === 'parents' ? 'parents' : '');
+  const k = (p[0] === 'klasse' || p[0] === 'fiche' || p[0] === 'ueben') ? p[1] : (p[0] === 'parents' || p[0] === 'guide' ? 'guide' : '');
   document.querySelectorAll('#onglets a').forEach(a => a.classList.toggle('actif', a.dataset.r === k));
 }
 window.addEventListener('hashchange', marquerOnglet);
@@ -100,6 +100,7 @@ function champ(k, theme) {
 function pageAccueil() {
   $app.innerHTML = `
   <section class="hero"><h1>${t('hero_t')}</h1><p>${t('hero_p')}</p><p><a class="btn-lien" href="#/preise">${t('preise')} →</a></p></section>
+  ${accueilBip()}
   <section class="classes">${[1, 2, 3, 4].map(k => `
     <a class="carte-classe" href="#/klasse/${k}">
       <span class="num">${k}</span><span>Klasse ${k}</span>
@@ -255,6 +256,7 @@ function router(garder) {
   else if (p[0] === 'fiche') { if (!garder) etat.sol = false; pageFiche(+p[1], p[2], memo); }
   else if (p[0] === 'ueben') pageUeben(+p[1], p[2], memo);
   else if (p[0] === 'parents') pageParents();
+  else if (p[0] === 'guide') pageGuide();
   else if (p[0] === 'preise') pagePreise();
   else if (p[0] === 'rechtliches') pageRechtliches();
   else pageAccueil();
