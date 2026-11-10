@@ -1,6 +1,6 @@
 // Service worker : l'appli marche hors ligne.
 // Nom propre à l'appli : plusieurs applis partagent l'adresse mroyal-apps.github.io.
-const CACHE = 'baobab-blaetter-20261110-1532';
+const CACHE = 'baobab-blaetter-20261110-1641';
 // Caches de Baobab Blätter : « baobab-blaetter-… », et l'ancien format « baobab-AAAAMMJJ-HHMM ».
 const ESTANOTRE = k => k.startsWith('baobab-blaetter-') || /^baobab-\d{8}-\d{4}$/.test(k);
 const FILES = ['./', './index.html', './style.css', './data.js', './textes.js', './aide.js', './generateurs.js', './generateurs2.js', './themen.js', './niveaux.js', './histoires.js', './boutique.js', './ueben.js', './robot.js', './guide.js', './version-test.js', './app.js', './installer.js',
