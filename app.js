@@ -1,6 +1,6 @@
 // Interface : accueil, choix de la classe, générateur de fiches, aide parents. 3 langues : fr, en, de.
 // Numéro de la version (à changer à chaque nouvelle version). Il s'affiche en bas de chaque page.
-const VERSION_APP = { num: '0.11', date: '10/11/2026' };
+const VERSION_APP = { num: '0.12', date: '10/11/2026' };
 const $app = document.getElementById('app');
 const etat = { graine: nouvelleGraine(), sol: false, route: '', langue: langueDepart() };
 function nouvelleGraine() { return Math.floor(Math.random() * 90000) + 10000; }
@@ -107,6 +107,7 @@ function pageAccueil() {
       <small>Mathe · Deutsch</small></a>`).join('')}
   </section>
   <section class="atouts">${t('atouts').map(([a, b]) => `<div><b>${a}</b><p>${b}</p></div>`).join('')}</section>`;
+  if (typeof bipVivant === 'function') bipVivant(document.querySelector('.carte-bip .bip-mini'), { lien: true, coucou: true });   // v0.12 : Bip bouge aussi sur l'accueil
 }
 
 function pageKlasse(k) {
@@ -189,7 +190,43 @@ function pageFiche(k, id, memo) {
   } else document.getElementById('b-acheter').onclick = () => ouvrirBoutique(k, id, () => router(true));
   dessiner();
 }
-function imprimer() { window.print(); }
+// v0.12 : imprimer. Sur iPad / iPhone, l'appli installée (et Brave) n'ouvre souvent pas la fenêtre d'impression.
+// On essaie window.print() ; si rien ne s'ouvre, on montre comment faire (Partager → Imprimer) et un bouton « Ouvrir dans Safari ».
+const IMPR_AIDE = {
+  fr: { titre: '🖨️ Imprimer sur iPad / iPhone', intro: 'Sur cet appareil, l\'appli ne peut pas ouvrir l\'impression toute seule. Fais comme ça :',
+    etapes: ['Touche « 🧭 Ouvrir dans Safari » ci-dessous. La même fiche s\'ouvre dans Safari.', 'Dans Safari, touche le bouton Partager ⬆️ (en haut ou en bas).', 'Touche « Imprimer ». Pour un PDF : touche « Options » ou écarte l\'aperçu avec 2 doigts, puis Partager → « Enregistrer dans Fichiers ».'],
+    safari: '🧭 Ouvrir dans Safari', reessayer: '🖨️ Réessayer', fermer: 'Fermer', note: 'Si tu avais changé les réglages, choisis-les encore dans Safari avant d\'imprimer.' },
+  en: { titre: '🖨️ Print on iPad / iPhone', intro: 'On this device, the app cannot open printing by itself. Do this:',
+    etapes: ['Tap “🧭 Open in Safari” below. The same sheet opens in Safari.', 'In Safari, tap the Share button ⬆️ (top or bottom).', 'Tap “Print”. For a PDF: tap “Options” or spread the preview with 2 fingers, then Share → “Save to Files”.'],
+    safari: '🧭 Open in Safari', reessayer: '🖨️ Try again', fermer: 'Close', note: 'If you changed the settings, choose them again in Safari before printing.' },
+  de: { titre: '🖨️ Drucken auf iPad / iPhone', intro: 'Auf diesem Gerät kann die App das Drucken nicht selbst öffnen. So geht es:',
+    etapes: ['Tippe unten auf „🧭 In Safari öffnen“. Dasselbe Blatt öffnet sich in Safari.', 'Tippe in Safari auf Teilen ⬆️ (oben oder unten).', 'Tippe auf „Drucken“. Für ein PDF: „Optionen“ oder die Vorschau mit 2 Fingern aufziehen, dann Teilen → „In Dateien sichern“.'],
+    safari: '🧭 In Safari öffnen', reessayer: '🖨️ Nochmal versuchen', fermer: 'Schließen', note: 'Hast du die Einstellungen geändert? Wähle sie in Safari noch einmal, bevor du druckst.' }
+};
+const estIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+let imprOuvert = false;
+window.addEventListener('beforeprint', () => { imprOuvert = true; });
+function aideImpression() {
+  const a = IMPR_AIDE[etat.langue] || IMPR_AIDE.fr;
+  let m = document.getElementById('aide-impr');
+  if (!m) { m = document.createElement('div'); m.id = 'aide-impr'; m.className = 'modale no-print'; document.body.appendChild(m); }
+  // le lien garde la même fiche (même graine) pour que Safari montre exactement le même blatt
+  const lien = location.href.split('#')[0] + location.hash.split('?')[0] + '?g=' + etat.graine;
+  m.innerHTML = `<div class="boite" role="dialog" aria-modal="true" aria-labelledby="impr-t"><button class="fermer" aria-label="${a.fermer}">×</button>
+    <h2 id="impr-t">${a.titre}</h2><p>${a.intro}</p><ol>${a.etapes.map(x => `<li>${x}</li>`).join('')}</ol>
+    <p><a class="btn principal" id="impr-safari" href="${lien}" target="_blank" rel="noopener">${a.safari}</a> <button class="btn" id="impr-encore">${a.reessayer}</button></p>
+    <p class="petit">${a.note}</p></div>`;
+  m.hidden = false;
+  const fermer = () => { m.hidden = true; };
+  m.querySelector('.fermer').onclick = fermer; m.onclick = e => { if (e.target === m) fermer(); };
+  m.querySelector('#impr-encore').onclick = () => { fermer(); setTimeout(() => window.print(), 50); };
+}
+function imprimer() {
+  imprOuvert = false;
+  try { window.print(); } catch (e) {}
+  // iPad / iPhone : si la fenêtre d'impression ne s'est pas ouverte, on aide
+  if (estIOS()) setTimeout(() => { if (!imprOuvert) aideImpression(); }, 900);
+}
 
 function aideHTML(id) {
   const a = aide(id); if (!a) return '';
@@ -247,7 +284,12 @@ function lire(texte) {
 }
 
 // ---------- Navigation ----------
-function lireRoute() { return location.hash; }
+function lireRoute() {
+  // v0.12 : « #/fiche/2/plusminus?g=12345 » (lien « Ouvrir dans Safari ») garde la même fiche
+  const [h, q] = location.hash.split('?'); const g = q && /(?:^|&)g=(\d+)/.exec(q);
+  if (g) etat.graine = +g[1];
+  return h;
+}
 function router(garder) {
   const memo = garder ? memoOptions() : null;
   const bq = document.getElementById('boutique'); if (bq) bq.hidden = true;
