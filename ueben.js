@@ -241,7 +241,7 @@ function pageUeben(k, id, memo) {
   const reussi = c => {
     const premier = !c.essais;
     faits++; if (premier) etoiles++;
-    c.classList.remove('faux'); c.classList.add('ok');
+    c.classList.remove('faux'); c.classList.add('ok'); c.removeAttribute('aria-invalid');
     serie = premier ? serie + 1 : 0;
     const cleSerie = serie === 5 || serie === 10 ? 'serie5' : serie === 3 ? 'serie3' : 'bravo';
     sonJuste(); dire(parole(cleSerie, enfant()) + (premier ? ' ⭐' : ''), 'content', undefined, cleSerie);
@@ -249,7 +249,7 @@ function pageUeben(k, id, memo) {
   };
   const rate = (c, attendu, indice) => {
     c.essais = (c.essais || 0) + 1;
-    c.classList.remove('secoue'); void c.offsetWidth; c.classList.add('faux', 'secoue');
+    c.classList.remove('secoue'); void c.offsetWidth; c.classList.add('faux', 'secoue'); if (c.tagName === 'INPUT') c.setAttribute('aria-invalid', 'true');
     sonFaux();
     if (c.essais >= 3) {        // après 3 essais : on montre la solution, sans étoile
       faits++; c.classList.remove('faux'); c.classList.add('vu');
@@ -290,6 +290,8 @@ function pageUeben(k, id, memo) {
     };
     c.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); verifier(); } });
     c.addEventListener('change', verifier);
+    // Téléphone : le clavier (numérique pour les nombres) ne doit pas cacher la case
+    c.addEventListener('focus', () => { setTimeout(() => { try { c.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 250); });
     if (!opts.audio) return c;
     const w = document.createElement('span'); w.className = 'u-audio';     // Diktat : 🔊 + case
     const b = bouton('🔊', 'u-haut-parleur'); b.title = 'Anhören';
@@ -304,22 +306,30 @@ function pageUeben(k, id, memo) {
       b.onclick = () => {
         if (termine(c)) return;
         if (x === att) { b.classList.add('bon'); c.querySelectorAll('button').forEach(y => y.disabled = true); reussi(c); }
-        else { b.disabled = true; rate(c, att); }
+        else { b.disabled = true; b.classList.add('non'); rate(c, att); }
       };
       c.appendChild(b);
     });
     c.montrer = () => c.querySelectorAll('button').forEach(b => { b.disabled = true; b.classList.toggle('bon', b.textContent === att); });
     return c;
   }
+  // Accessibilité : un mot à toucher se comporte comme un bouton (Tab, Entrée, Espace)
+  function motBouton(s) {
+    s.setAttribute('role', 'button'); s.tabIndex = 0;
+    s.addEventListener('keydown', e => {
+      if (e.target === s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); s.click(); }
+    });
+    return s;
+  }
   // 3. Mots à toucher dans une phrase (Ein Wort zu viel)
   function casePhraseClic(mots, juste) {
     const c = document.createElement('p'); c.className = 'u-case u-clic'; c._att = juste;
     mots.forEach((m, i) => {
-      const s = document.createElement('span'); s.className = 'u-mot'; s.textContent = m; s.tabIndex = 0;
+      const s = document.createElement('span'); s.className = 'u-mot'; s.textContent = m; motBouton(s);
       s.onclick = () => {
         if (termine(c)) return;
-        if (i === juste) { s.classList.add('barre'); reussi(c); }
-        else { s.classList.add('pas-ca'); rate(c, mots[juste]); }
+        if (i === juste) { s.classList.add('barre'); s.setAttribute('aria-label', m + ' – richtig'); reussi(c); }
+        else { s.classList.add('pas-ca'); s.setAttribute('aria-label', m + ' – falsch'); rate(c, mots[juste]); }
       };
       c.append(s, ' ');
     });
@@ -330,7 +340,7 @@ function pageUeben(k, id, memo) {
   function texteFautes(motsFaux, motsJustes, fautes) {
     const cadre = document.createElement('div'); cadre.className = 'cadre lesetexte u-fehlertext';
     motsFaux.forEach((m, i) => {
-      const s = document.createElement('span'); s.textContent = m; s.tabIndex = 0;
+      const s = document.createElement('span'); s.textContent = m; motBouton(s);
       if (fautes.has(i)) {
         s.className = 'u-case u-mot u-faute';
         const att = motsJustes[i]; s._att = att;
@@ -341,7 +351,7 @@ function pageUeben(k, id, memo) {
           inp.className = 'u-fehler-input'; inp.value = m; inp.autocomplete = 'off'; inp.spellcheck = false;
           inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off');
           inp.style.width = Math.max(3, m.length * 0.8 + 1.5) + 'em';
-          s.textContent = ''; s.appendChild(inp); inp.focus(); inp.select();
+          s.textContent = ''; s.removeAttribute('role'); s.appendChild(inp); inp.focus(); inp.select();
           const verif = () => {
             if (termine(s) || !inp.value.trim() || inp.value === inp.dernier) return; inp.dernier = inp.value;
             if (estJuste(inp.value, att, 'mot')) { s.textContent = att; reussi(s); }
@@ -460,7 +470,7 @@ function pageUeben(k, id, memo) {
     qui = e && PERSOS[e.avatar] ? e.avatar : 'robot';   // v0.11 : Bip le robot par défaut ; l'enfant peut choisir Amara ou Noah
     majNom(); serie = 0;
     dire(bonjour(), 'content', false, 'bonjour');
-    if (libre) setTimeout(() => suivant(null), 50);
+    if (libre) setTimeout(() => { if (document.getElementById('u-zone')) suivant(null); }, 50);   // la page peut avoir été quittée entre-temps
   };
   document.querySelectorAll('.ueben .options select, .ueben .options input').forEach(el => el.addEventListener('change', dessiner));
   // Formulaire « mon prénom »
